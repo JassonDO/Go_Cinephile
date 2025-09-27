@@ -1,0 +1,58 @@
+version: '3.5'
+
+services:
+  mongo-voting:
+    hostname: mongo.voting
+    image: mongo:6.0.4
+    container_name: voting-mongo
+    restart: always
+    volumes:
+      - voting-mongo-data:/data/db
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_DATABASE=voting
+      - MONGO_INITDB_ROOT_USERNAME=voting-user
+      - MONGO_INITDB_ROOT_PASSWORD=voting-password
+      - MONGO_INITDB_ROOT_DATABASE=voting
+    networks:
+      - voting-network
+
+  api-voting:
+    build: .
+    container_name: voting-api
+    restart: always
+    ports:
+      - 4444:3000
+    command: ./api
+    depends_on:
+      - mongo-voting
+    networks:
+      - voting-network
+
+  crawler-voting:
+    build: .
+    container_name: voting-crawler
+    restart: always
+    command: ./crawler
+    depends_on:
+      - mongo-voting
+    networks:
+      - voting-network
+
+  scheduler-voting:
+    build: .
+    container_name: voting-scheduler
+    restart: always
+    command: ./scheduler
+    depends_on:
+      - mongo-voting
+    networks:
+      - voting-network
+
+volumes:
+  voting-mongo-data:
+
+
+networks:
+  voting-network:
